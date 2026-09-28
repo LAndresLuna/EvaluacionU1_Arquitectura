@@ -90,7 +90,8 @@ class ModeloInscripcionTest {
         IObserverInscripcion harto = new IObserverInscripcion() {
             @Override
             public void update(IModeloInscripcion m) {
-                m.desuscribir(this);
+                // desuscribir no está en la interfaz: se necesita el modelo concreto
+                modelo.desuscribir(this);
             }
         };
         modelo.suscribir(observador);

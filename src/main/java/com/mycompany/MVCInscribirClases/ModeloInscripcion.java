@@ -18,6 +18,11 @@ import java.util.Objects;
  * {@code null}: se guarda el equivalente vacío, así los getters nunca devuelven
  * {@code null} y la Vista no necesita defenderse.</p>
  *
+ * <p>{@link #suscribir}, {@link #desuscribir} y {@link #enLote} son públicos
+ * aquí y no están en {@link IModeloInscripcion}, que solo declara getters y
+ * setters: el cableado del Observer no es estado, y así nadie que solo tenga la
+ * interfaz puede ponerse a publicar.</p>
+ *
  * @author andres
  */
 public class ModeloInscripcion implements IModeloInscripcion {
@@ -32,7 +37,7 @@ public class ModeloInscripcion implements IModeloInscripcion {
     private int profundidadLote;
     private boolean pendiente;
 
-    @Override
+    /** Registra un observador y le notifica el estado actual de inmediato. */
     public void suscribir(IObserverInscripcion observador) {
         if (observador == null || observadores.contains(observador)) {
             return;
@@ -41,12 +46,17 @@ public class ModeloInscripcion implements IModeloInscripcion {
         notificarSuscriptores();
     }
 
-    @Override
     public void desuscribir(IObserverInscripcion observador) {
         observadores.remove(observador);
     }
 
-    @Override
+    /**
+     * Ejecuta varias publicaciones como si fueran una sola, para que un evento
+     * que cambia el resumen, el mensaje y la ficha llegue a la Vista en una
+     * única notificación y no con estados intermedios.
+     *
+     * <p>Los lotes se pueden anidar: solo notifica al cerrar el más externo.</p>
+     */
     public void enLote(Runnable publicaciones) {
         if (publicaciones == null) {
             return;

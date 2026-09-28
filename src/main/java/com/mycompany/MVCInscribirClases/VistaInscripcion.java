@@ -45,6 +45,12 @@ import javax.swing.SwingUtilities;
  * {@link IModeloInscripcion#puedeInscribir()} y
  * {@link IModeloInscripcion#puedeFinalizar()}.</p>
  *
+ * <p>El campo {@code modelo} está declarado como {@link IModeloInscripcion}, que
+ * solo expone getters y setters. Es deliberado: al no tener las referencias del
+ * cableado ({@code suscribir}, {@code enLote}) ni la clase concreta, esta clase
+ * no puede escribir el estado aunque alguien lo intente. No calcula totales ni
+ * valida reglas: solo pinta lo que le llegó ya resuelto en los DTOs.</p>
+ *
  * <p>El estilo y las medidas viven en {@link Paleta} y en el paquete
  * {@code presentacion}, para poder ajustarlos en un solo lugar.</p>
  *

@@ -6,33 +6,22 @@ import dto.ResumenInscripcionDTO;
 import java.util.List;
 
 /**
- * Contrato del Modelo del patrón MVC.
+ * Contrato del Modelo del patrón MVC: solo getters y setters.
  *
- * <p>Solo declara estado: los getters son lo que la Vista lee al ser notificada
- * y los setters lo que el Controlador usa para publicar. Ninguna regla de negocio
- * vive aquí, y el estado se expone en DTOs para que la Vista no toque el
- * dominio.</p>
+ * <p>Declara <em>qué</em> se puede ver y cómo se escribe el estado, no
+ * <em>cómo</em> se avisa. Suscribirse y agrupar publicaciones no son estado:
+ * son cableado, y por eso viven en {@link ModeloInscripcion}. Así, una Vista que
+ * se programe contra esta interfaz no puede ni cambiar un valor ni suscribirse
+ * por su cuenta.</p>
  *
- * <p>La disponibilidad ({@link #puedeInscribir()} y {@link #puedeFinalizar()}) se
- * deriva del estado publicado y no se le pregunta al Controlador, para que el MVC
- * no quede circular.</p>
+ * <p>El estado se expone en DTOs para que la Vista no toque el dominio, y la
+ * disponibilidad ({@link #puedeInscribir()} y {@link #puedeFinalizar()}) se
+ * deriva del estado publicado en lugar de preguntarse al Controlador, para que
+ * el MVC no quede circular.</p>
  *
  * @author andres
  */
 public interface IModeloInscripcion {
-
-    void suscribir(IObserverInscripcion observador);
-
-    void desuscribir(IObserverInscripcion observador);
-
-    /**
-     * Ejecuta varias publicaciones como una sola. Sin el lote, un evento que
-     * cambia el resumen, el mensaje y la ficha llega a la Vista en tres
-     * notificaciones, alguna de ellas con un estado a medio camino.
-     *
-     * <p>Los lotes se pueden anidar: solo notifica al cerrar el más externo.</p>
-     */
-    void enLote(Runnable publicaciones);
 
     List<CursoDTO> getCursosDisponibles();
 

@@ -17,33 +17,37 @@ import java.util.Optional;
 /**
  * Controlador del patrón MVC.
  *
- * <p>Recibe los eventos de la Vista, aplica las reglas del caso de uso sobre las
- * entidades del dominio y publica el resultado en el Modelo. Cada evento publica
- * su estado completo dentro de un {@link IModeloInscripcion#enLote(Runnable)
- * lote}, de modo que la Vista recibe una sola notificación coherente y nunca una
- * a medio camino.</p>
+ * <p>Recibe los eventos de la Vista, se los pasa a las entidades del dominio y
+ * publica el resultado en el Modelo. La flecha va en un solo sentido: el
+ * Controlador llama al dominio, y el dominio nunca le devuelve la llamada.</p>
  *
- * <p>No guarda referencia a la Vista, y lo que la Vista necesita para habilitar
- * sus botones no se le pregunta aquí: se deriva del estado publicado.</p>
+ * <p>No reimplementa reglas: las pregunta al dominio
+ * ({@code inscripcion.inscribir(...)} lanza {@link ExcepcionInscripcion} y aquí
+ * solo se traduce el mensaje). Y no guarda referencia a la Vista, ni lo que la
+ * Vista necesita para habilitar sus botones: eso se deriva del estado publicado.</p>
+ *
+ * <p>Se programa contra {@link ModeloInscripcion} y no contra
+ * {@link IModeloInscripcion} porque, además de escribir el estado, necesita
+ * agruparlo con {@code enLote}. La Vista sí va contra la interfaz: solo lee.</p>
  *
  * @author andres
  */
 public class ControlInscripcion {
 
-    private final IModeloInscripcion modelo;
+    private final ModeloInscripcion modelo;
     private final CatalogoCursos catalogo;
     private final GeneradorFolio folios;
     private final Inscripcion inscripcion;
 
-    public ControlInscripcion(IModeloInscripcion modelo) {
+    public ControlInscripcion(ModeloInscripcion modelo) {
         this(modelo, CatalogoCursos.porDefecto(), new GeneradorFolio());
     }
 
-    public ControlInscripcion(IModeloInscripcion modelo, List<Curso> catalogo) {
+    public ControlInscripcion(ModeloInscripcion modelo, List<Curso> catalogo) {
         this(modelo, new CatalogoCursos(catalogo), new GeneradorFolio());
     }
 
-    public ControlInscripcion(IModeloInscripcion modelo, CatalogoCursos catalogo,
+    public ControlInscripcion(ModeloInscripcion modelo, CatalogoCursos catalogo,
             GeneradorFolio folios) {
         this.modelo = Objects.requireNonNull(modelo, "modelo");
         this.catalogo = Objects.requireNonNull(catalogo, "catalogo");
@@ -74,6 +78,7 @@ public class ControlInscripcion {
             }
             Curso curso = encontrado.get();
             try {
+                // El dominio dice si se puede; aquí solo se traduce el rechazo.
                 inscripcion.inscribir(curso);
                 catalogo.retirar(curso);
                 modelo.setMensajeError("");
@@ -103,10 +108,15 @@ public class ControlInscripcion {
         });
     }
 
+    /**
+     * El Controlador decide si el evento "finalizar" tiene sentido; la Vista no lo
+     * pregunta, lo deriva del Modelo. Es la única disponibilidad que vive aquí.
+     */
     private boolean puedeFinalizar() {
         return !inscripcion.isFinalizada() && !inscripcion.getCursos().isEmpty();
     }
 
+    /** Frontera: el dominio se lee aquí y sale convertido en DTOs. */
     private void publicarEstado() {
         modelo.setCursosDisponibles(catalogo.getCursos().stream()
                 .map(ControlInscripcion::aDto).toList());
