@@ -1,10 +1,7 @@
 package dto;
 
 /**
- * Objeto de transferencia de datos de un curso.
- *
- * <p>Viaja del Modelo hacia la Vista para que la interfaz nunca manipule
- * directamente objetos del dominio.</p>
+ * Datos de un curso que viajan del Modelo a la Vista.
  *
  * @author andres
  */

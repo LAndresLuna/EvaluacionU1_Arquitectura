@@ -5,32 +5,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Inscripción del alumno: la lista de cursos inscritos y el monto a pagar.
- *
- * <p>Entidad del dominio que concentra las reglas del caso de uso: no se puede
- * inscribir dos veces el mismo curso, no se puede inscribir despues de
- * finalizar y no se puede generar la ficha de pago sin cursos.</p>
+ * Inscripción del alumno. Concentra las reglas del caso de uso: no se repite
+ * curso, no se inscribe tras finalizar y la ficha exige al menos un curso.
  *
  * @author andres
  */
-public class Inscripcion {
+public final class Inscripcion {
 
     private final List<Curso> cursos = new ArrayList<>();
     private boolean finalizada;
 
     /**
-     * Inscribe un curso en la inscripción.
-     *
-     * @param curso curso seleccionado de la lista de disponibles
-     * @throws ExcepcionInscripcion si la inscripción ya fué finalizada o si el
-     *                              curso ya está inscrito
+     * @throws ExcepcionInscripcion si ya se finalizó o el curso ya está inscrito
      */
     public void inscribir(Curso curso) {
         if (curso == null) {
             throw new ExcepcionInscripcion("No se puede inscribir un curso vacío");
         }
         if (finalizada) {
-            throw new ExcepcionInscripcion("La inscripcion ya fué finalizada, no se pueden agregar cursos");
+            throw new ExcepcionInscripcion("La inscripción ya fue finalizada, "
+                    + "no se pueden agregar cursos");
         }
         if (yaEstaInscrito(curso)) {
             throw new ExcepcionInscripcion("El curso " + curso.getCodigo() + " ya está inscrito");
@@ -39,21 +33,20 @@ public class Inscripcion {
     }
 
     /**
-     * Cierra la inscripción y genera la ficha de pago.
+     * Cierra la inscripción y emite la ficha de pago.
      *
-     * @return ficha de pago con los cursos inscritos y el total
-     * @throws ExcepcionInscripcion si no hay cursos inscritos o si la
-     *                              inscripción ya fue finalizada
+     * @throws ExcepcionInscripcion si no hay cursos o ya se finalizó
      */
-    public FichaPago finalizar() {
+    public FichaPago finalizar(LocalDate fecha, String folio) {
         if (finalizada) {
-            throw new ExcepcionInscripcion("La inscripción ya fué finalizada");
+            throw new ExcepcionInscripcion("La inscripción ya fue finalizada");
         }
         if (cursos.isEmpty()) {
-            throw new ExcepcionInscripcion("Debe inscribirse al menos un curso para generar la ficha de pago");
+            throw new ExcepcionInscripcion(
+                    "Debe inscribirse al menos un curso para generar la ficha de pago");
         }
         finalizada = true;
-        return new FichaPago(LocalDate.now(), cursos);
+        return new FichaPago(folio, fecha, cursos);
     }
 
     public List<Curso> getCursos() {
@@ -72,14 +65,8 @@ public class Inscripcion {
         return finalizada;
     }
 
-    /**
-     * Indica si el curso ya forma parte de la inscripción.
-     *
-     * @param curso curso a verificar
-     * @return {@code true} si ya está inscrito
-     */
     public boolean yaEstaInscrito(Curso curso) {
-        return cursos.stream()
+        return curso != null && cursos.stream()
                 .anyMatch(inscrito -> inscrito.getCodigo().equalsIgnoreCase(curso.getCodigo()));
     }
 }

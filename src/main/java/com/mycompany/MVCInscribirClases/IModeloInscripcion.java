@@ -6,80 +6,62 @@ import dto.ResumenInscripcionDTO;
 import java.util.List;
 
 /**
- * Contrato del Modelo del patrón MVC
+ * Contrato del Modelo del patrón MVC.
  *
- * <p>La interfaz solo declara getters y setters. Los getters
- * son lo que la Vista lee cuando el Modelo la notifica, y los setters son lo
- * que el Controlador usa para publicar el estado ya calculado. Ninguna regla de
- * negocio vive aqui: toda notificacion llega por el patron Observer, con
- * {@link IObserverInscripcion#update(IModeloInscripcion)}.</p>
+ * <p>Solo declara estado: los getters son lo que la Vista lee al ser notificada
+ * y los setters lo que el Controlador usa para publicar. Ninguna regla de negocio
+ * vive aquí, y el estado se expone en DTOs para que la Vista no toque el
+ * dominio.</p>
  *
- * <p>El estado se expone en forma de DTOs, de modo que la Vista nunca toca
- * objetos del dominio.</p>
+ * <p>La disponibilidad ({@link #puedeInscribir()} y {@link #puedeFinalizar()}) se
+ * deriva del estado publicado y no se le pregunta al Controlador, para que el MVC
+ * no quede circular.</p>
  *
  * @author andres
  */
 public interface IModeloInscripcion {
 
-    /**
-     * Registra un observador (la Vista) y le notifica de inmediato el estado
-     * actual, para que la pantalla se muestre con los datos de arranque.
-     *
-     * @param observador vista que va a actualizarse
-     */
     void suscribir(IObserverInscripcion observador);
 
+    void desuscribir(IObserverInscripcion observador);
+
     /**
-     * @return cursos que todavia se pueden inscribir
+     * Ejecuta varias publicaciones como una sola. Sin el lote, un evento que
+     * cambia el resumen, el mensaje y la ficha llega a la Vista en tres
+     * notificaciones, alguna de ellas con un estado a medio camino.
+     *
+     * <p>Los lotes se pueden anidar: solo notifica al cerrar el más externo.</p>
      */
+    void enLote(Runnable publicaciones);
+
     List<CursoDTO> getCursosDisponibles();
 
-    /**
-     * @return cursos inscritos, monto a pagar y estado de la inscripción
-     */
     ResumenInscripcionDTO getResumenInscripcion();
 
-    /**
-     * @return ficha de pago generada, o {@code null} si la inscripción no ha
-     *         finalizado
-     */
+    /** @return la ficha generada, o {@code null} si aún no se ha finalizado */
     FichaPagoDTO getFichaPago();
 
-    /**
-     * @return mensaje de la última operación rechazada, o cadena vacía
-     */
+    /** @return el mensaje de la última operación rechazada, o cadena vacía */
     String getMensajeError();
 
-    /**
-     * @return {@code true} si la inscripción ya fue finalizada
-     */
     boolean isInscripcionFinalizada();
 
-    /**
-     * Publica la nueva lista de cursos disponibles.
-     *
-     * @param cursos cursos que todavía se pueden inscribir
-     */
+    /** @return si sigue abierta la inscripción y queda algún curso disponible */
+    default boolean puedeInscribir() {
+        return !isInscripcionFinalizada() && !getCursosDisponibles().isEmpty();
+    }
+
+    /** @return si sigue abierta la inscripción y hay al menos un curso inscrito */
+    default boolean puedeFinalizar() {
+        return !isInscripcionFinalizada() && !getResumenInscripcion().cursos().isEmpty();
+    }
+
+    /** Un {@code null} se guarda como el valor vacío equivalente. */
     void setCursosDisponibles(List<CursoDTO> cursos);
 
-    /**
-     * Publica el nuevo estado de la inscripción.
-     *
-     * @param resumen cursos inscritos, monto a pagar y estado de la inscripción
-     */
     void setResumenInscripcion(ResumenInscripcionDTO resumen);
 
-    /**
-     * Publica la ficha de pago generada al finalizar.
-     *
-     * @param ficha ficha con el detalle de la inscripción
-     */
     void setFichaPago(FichaPagoDTO ficha);
 
-    /**
-     * Publica el resultado de la última operación.
-     *
-     * @param mensaje texto a mostrar, o cadena vacía si no hubo error
-     */
     void setMensajeError(String mensaje);
 }

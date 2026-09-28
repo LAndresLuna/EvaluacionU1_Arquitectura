@@ -1,29 +1,18 @@
 package dominio;
 
+import java.util.Objects;
+
 /**
- * Curso que el alumno puede inscribir.
- *
- * <p>Entidad del dominio: no depende de la interfáz gráfica (Vista) ni del
- * transporte de datos (DTO). Solo contiene la información y las reglas propias
- * de un curso del catálogo.</p>
+ * Curso del catálogo. Inmutable, con igualdad por valor.
  *
  * @author andres
  */
-public class Curso {
+public final class Curso {
 
     private final String codigo;
     private final String nombre;
     private final double costo;
 
-    /**
-     * Crea un curso del catálogo.
-     *
-     * @param codigo código del curso, por ejemplo {@code ISW-101}
-     * @param nombre nombre completo del curso
-     * @param costo  costo en pesos, debe ser mayor que cero
-     * @throws IllegalArgumentException si el código o el nombre están vacíos o
-     *                                  si el costo no es positivo
-     */
     public Curso(String codigo, String nombre, double costo) {
         if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del curso es obligatorio");
@@ -32,7 +21,8 @@ public class Curso {
             throw new IllegalArgumentException("El nombre del curso es obligatorio");
         }
         if (costo <= 0) {
-            throw new IllegalArgumentException("El costo del curso " + codigo + " debe ser mayor que cero");
+            throw new IllegalArgumentException("El costo del curso " + codigo
+                    + " debe ser mayor que cero");
         }
         this.codigo = codigo.trim();
         this.nombre = nombre.trim();
@@ -49,6 +39,24 @@ public class Curso {
 
     public double getCosto() {
         return costo;
+    }
+
+    @Override
+    public boolean equals(Object otro) {
+        if (this == otro) {
+            return true;
+        }
+        if (!(otro instanceof Curso curso)) {
+            return false;
+        }
+        return Double.compare(costo, curso.costo) == 0
+                && codigo.equalsIgnoreCase(curso.codigo)
+                && nombre.equals(curso.nombre);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(codigo.toUpperCase(java.util.Locale.ROOT), nombre, costo);
     }
 
     @Override

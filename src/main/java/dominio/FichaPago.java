@@ -2,31 +2,27 @@ package dominio;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Ficha de pago generada al finalizar la inscripción.
  *
- * <p>Documento inmutable: guarda el folio, la fecha, los cursos inscritos con su
- * costo y el total a pagar.</p>
+ * <p>Recibe el folio ya emitido por {@link GeneradorFolio} en lugar de calcularlo
+ * con un contador estático, para no depender del estado global del proceso.</p>
  *
  * @author andres
  */
-public class FichaPago {
+public final class FichaPago {
 
     private final String folio;
     private final LocalDate fecha;
     private final List<Curso> cursos;
     private final double total;
 
-    /**
-     * Crea la ficha de pago de una inscripción.
-     *
-     * @param fecha  fecha de emision de la ficha
-     * @param cursos cursos inscritos
-     */
-    public FichaPago(LocalDate fecha, List<Curso> cursos) {
-        this.folio = generarFolio(fecha);
+    public FichaPago(String folio, LocalDate fecha, List<Curso> cursos) {
+        if (cursos == null) {
+            throw new IllegalArgumentException("La ficha de pago necesita al menos un curso");
+        }
+        this.folio = folio;
         this.fecha = fecha;
         this.cursos = List.copyOf(cursos);
         this.total = this.cursos.stream().mapToDouble(Curso::getCosto).sum();
@@ -52,16 +48,8 @@ public class FichaPago {
         return cursos.size();
     }
 
-    /**
-     * Genera el folio consecutivo de la ficha, por ejemplo {@code FIC-2026-0001}.
-     *
-     * @param fecha fecha de emisión
-     * @return folio de la ficha
-     */
-    private static String generarFolio(LocalDate fecha) {
-        return String.format("FIC-%d-%04d", fecha.getYear(), SECUENCIA.incrementAndGet());
+    @Override
+    public String toString() {
+        return "FichaPago[" + folio + ", " + getCantidadCursos() + " curso(s), " + total + "]";
     }
-
-    /** Secuencia de folios emitidos en la ejecución actual. */
-    private static final AtomicInteger SECUENCIA = new AtomicInteger();
 }
